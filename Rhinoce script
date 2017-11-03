@@ -1,0 +1,97 @@
+Option Explicit
+'Script written by <insert name>
+'Script copyrighted by <insert company name>
+'Script version 2017年9月8日 9:57:56
+
+Call Main()
+Sub Main()
+	Const objecttype = "C:\Users\junry.DESKTOP-F4TRRJF\AppData\Roaming\McNeel\Rhinoceros\5.0\scripts\case1.rvb"
+	Dim strsurface, Udomain, Vdomain, Uparam, Vparam, arrpoints, i, j, secu, secv
+	strsurface = Rhino.GetObject("select surface", objecttype)
+	If IsNull(strsurface) Then Exit Sub
+	
+	'surface domains
+	secu = 49
+	secv = 16
+	ReDim collec(secu,secv)
+	Udomain = Rhino.SurfaceDomain(strsurface, 0)
+	Vdomain = Rhino.SurfaceDomain(strsurface, 1)
+	
+	For i = 0 To secu
+		For j=0 To secv
+			Uparam = Udomain(0) + i * ((Udomain(1) - Udomain(0)) / secu)
+			Vparam = Vdomain(0) + j * ((Vdomain(1) - Vdomain(0)) / secv)
+			arrpoints = Rhino.EvaluateSurface(strsurface, array(Uparam, Vparam))
+			collec(i, j) = arrpoints
+		Next
+	Next
+	
+	Dim npoint1, npoint2, npoint3, npoint4
+	For i=0 To secu - 1 Step 2
+		For j =0 To secv - 1 Step 2
+			npoint1 = collec(i, j + 1)
+			npoint2 = collec(i + 1, j + 2)
+			npoint3 = collec(i + 2, j + 1)
+			npoint4 = collec(i + 1, j)
+			Call pipe(npoint1, npoint2)
+			Call pipe(npoint2, npoint3)
+			Call pipe(npoint3, npoint4)
+			Call pipe(npoint4, npoint1)
+			
+			Call addpts(npoint1, npoint2, npoint3, npoint4)
+			
+			Dim line
+			line = Rhino.addline(npoint1, npoint2)
+			Dim line2
+			line2 = Rhino.AddLine(npoint2, npoint3)
+			Dim line3
+			line3 = Rhino.AddLine(npoint3, npoint4)
+			Dim line4
+			line4 = Rhino.AddLine(npoint4, npoint1)
+		Next
+	Next
+End Sub
+
+Function pipe(npoint1, npoint2)
+	Dim strline, strcmd, pipeRadius
+	strline = Rhino.AddLine(npoint1, npoint2)
+	pipeRadius = 2
+	strcmd = "! _Pipe _SelID" & strline & " " & pipeRadius & " _Enter _Enter"
+	
+	Call Rhino.Command(strcmd)
+End Function
+
+Function pipe(npoint2, npoint3)
+	Dim strline2, strcmd,pipeRadius
+	strline2 = Rhino.AddLine(npoint2, npoint3)
+	pipeRadius = 2
+	strcmd = "! _Pipe _SelID" & strline2 & " " & pipeRadius & " _Enter _Enter"
+	
+	Call Rhino.Command(strcmd)
+End Function
+
+Function pipe(npoint3, npoint4)
+	Dim strline3,strcmd,pipeRadius
+	strline3 = Rhino.AddLine(npoint3, npoint4)
+	pipeRadius = 2
+	strcmd = "! _Pipe _SelID" & strline3 & " " & pipeRadius & "_Enter _Enter"
+	
+	Call Rhino.Command(strcmd)
+End Function
+
+Function pipe(npoint4, npoint1)
+	Dim strline4, strcmd, pipeRadius
+	strline4 = Rhino.AddLine(npoint4, npoint1)
+	pipeRadius = 2
+	strcmd = "! _Pipe _SelID" & strline4 & " " & pipeRadius & " _Enter _Enter"
+	
+	Call Rhino.Command(strcmd)
+End Function
+
+Function addpts(npoint1, npoint2, npoint3, npoint4)
+	Dim addpt1,addpt2,addpt3,addpt4
+	addpt1 = Rhino.AddPoint(npoint1)
+	addpt2 = Rhino.AddPoint(npoint2)
+	addpt3 = Rhino.AddPoint(npoint3)
+	addpt4 = Rhino.AddPoint(npoint4)
+End Function
